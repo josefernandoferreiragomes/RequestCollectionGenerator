@@ -20,7 +20,7 @@ public class BrunoCollectionService
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var records = csv.GetRecords<ApiLogEntry>().ToList();
 
-        // Group by TraceId
+        // Group by TraceId (one root folder per trace)
         var groupedByTrace = records
             .GroupBy(r => r.TraceId)
             .OrderBy(g => g.First().TimeStamp);
@@ -31,15 +31,23 @@ public class BrunoCollectionService
             Directory.CreateDirectory(traceFolder);
 
             var orderedEntries = traceGroup.OrderBy(r => r.TimeStamp).ToList();
+            var previousCallee = string.Empty;
 
             foreach (var entry in orderedEntries)
             {
                 var callee = GetCalleeFolder(entry.RequestedUrl);
-                var calleePath = Path.Combine(traceFolder, callee);
-                Directory.CreateDirectory(calleePath);
+
+                // Nest callee under the previous one (to simulate trace chain)
+                string fullPath;
+                if (!string.IsNullOrEmpty(previousCallee) && !callee.Equals(previousCallee, StringComparison.OrdinalIgnoreCase))
+                    fullPath = Path.Combine(traceFolder, previousCallee, callee);
+                else
+                    fullPath = Path.Combine(traceFolder, callee);
+
+                Directory.CreateDirectory(fullPath);
 
                 string fileName = $"{entry.Verb}_{ShortenUrl(entry.RequestedUrl)}.bru";
-                string bruFilePath = Path.Combine(calleePath, SanitizeFileName(fileName));
+                string bruFilePath = Path.Combine(fullPath, SanitizeFileName(fileName));
 
                 var request = new
                 {
@@ -61,6 +69,8 @@ public class BrunoCollectionService
 
                 var json = JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(bruFilePath, json);
+
+                previousCallee = callee;
             }
         }
     }
@@ -84,7 +94,7 @@ public class BrunoCollectionService
         var headers = new Dictionary<string, string>();
         if (string.IsNullOrWhiteSpace(headerContent)) return headers;
 
-        foreach (var line in headerContent.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        foreach (var line in headerContent.Split(';', '\n', StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = line.Split(':', 2);
             if (parts.Length == 2)
