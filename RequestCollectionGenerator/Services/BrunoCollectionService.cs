@@ -19,7 +19,7 @@ public class BrunoCollectionService
         using var reader = new StreamReader(csvPath);
         var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            BadDataFound = null, // Ignore bad data
+            BadDataFound = null,
             Mode = CsvMode.RFC4180
         };
         using var csv = new CsvReader(reader, config);
@@ -30,9 +30,14 @@ public class BrunoCollectionService
             .GroupBy(r => r.TraceId)
             .OrderBy(g => g.First().TimeStamp);
 
+        // ✅ Create the requests root folder expected by Bruno
+        string requestsRoot = Path.Combine(outputPath, "requests");
+        Directory.CreateDirectory(requestsRoot);
+
         foreach (var traceGroup in groupedByTrace)
         {
-            string traceFolder = Path.Combine(outputPath, SanitizeFolderName(traceGroup.Key));
+            // ✅ Each trace lives inside the requests folder
+            string traceFolder = Path.Combine(requestsRoot, SanitizeFolderName(traceGroup.Key));
             Directory.CreateDirectory(traceFolder);
 
             var orderedEntries = traceGroup.OrderBy(r => r.TimeStamp).ToList();
@@ -69,7 +74,7 @@ public class BrunoCollectionService
                         method = entry.Verb.ToUpper(),
                         headers = ParseHeaders(entry.HeaderContent),
                         body = entry.BodyContent
-                    }
+    }
                 };
 
                 var json = JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true });
@@ -80,6 +85,7 @@ public class BrunoCollectionService
         }
         GenerateBrunoJsonFile(outputPath);
     }
+
 
     private void GenerateBrunoJsonFile(string outputPath)
     {
