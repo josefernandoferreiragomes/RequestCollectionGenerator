@@ -17,7 +17,12 @@ public class BrunoCollectionService
     public void GenerateCollection(string csvPath, string outputPath)
     {
         using var reader = new StreamReader(csvPath);
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            BadDataFound = null, // Ignore bad data
+            Mode = CsvMode.RFC4180
+        };
+        using var csv = new CsvReader(reader, config);
         var records = csv.GetRecords<ApiLogEntry>().ToList();
 
         // Group by TraceId (one root folder per trace)
@@ -73,6 +78,23 @@ public class BrunoCollectionService
                 previousCallee = callee;
             }
         }
+        GenerateBrunoJsonFile(outputPath);
+    }
+
+    private void GenerateBrunoJsonFile(string outputPath)
+    {
+        var brunoManifest = new
+        {
+            version = "1",
+            name = "Generated API Collection",
+            type = "collection",
+            ignore = new[] { "node_modules", ".git" },
+            description = "Generated from Azure logs"
+        };
+
+        File.WriteAllText(Path.Combine(outputPath, "bruno.json"),
+            JsonSerializer.Serialize(brunoManifest, new JsonSerializerOptions { WriteIndented = true }));
+
     }
 
     private string GetCalleeFolder(string url)
@@ -108,7 +130,26 @@ public class BrunoCollectionService
         => Regex.Replace(name, @"[^\w\d_-]+", "_");
 
     private string SanitizeFileName(string name)
-        => Regex.Replace(name, @"[^\w\d_-]+", "_");
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return string.Empty;
+
+        // Preserve the extension (e.g. ".bru") and sanitize only the filename part.
+        var extension = Path.GetExtension(name) ?? string.Empty;
+        var baseName = Path.GetFileNameWithoutExtension(name) ?? string.Empty;
+
+        var cleanedBase = Regex.Replace(baseName, @"[^\w\d_-]+", "_");
+
+        if (string.IsNullOrEmpty(extension))
+            return cleanedBase;
+
+        // Keep a safe extension (remove any unexpected chars from extension, ensure leading dot)
+        var cleanedExt = Regex.Replace(extension, @"[^.\w\d_-]+", string.Empty);
+        if (!cleanedExt.StartsWith("."))
+            cleanedExt = "." + cleanedExt;
+
+        return cleanedBase + cleanedExt;
+    }
 
     private string ShortenUrl(string url)
     {
