@@ -99,22 +99,24 @@ public class BrunoCollectionService
                 // Include headers if any
                 if (headers.Any())
                 {
-                    bru.AppendLine("  headers {");
+                    bru.AppendLine("headers {");
                     foreach (var h in headers)
                     {
-                        bru.AppendLine($"     {h.Key}: {h.Value} ");
+                        bru.AppendLine($"  {h.Key}: {h.Value} ");
                     }
-                    bru.AppendLine("  }");
+                    bru.AppendLine("}");
                     bru.AppendLine();
                 }
 
                 // Include body if present
                 if (!string.IsNullOrWhiteSpace(entry.BodyContent))
                 {
-                    // Escape double quotes for safety
-                    var safeBody = entry.BodyContent;//.Replace("\"", "\\\"");
-                    bru.AppendLine("  body: json {");
-                    bru.AppendLine($"  {safeBody}");
+                    var trimmed = entry.BodyContent.Trim();
+                    // remove any surrounding extra braces if your logs double-wrap JSON
+                    if (trimmed.StartsWith("{") && trimmed.EndsWith("}"))
+                        trimmed = trimmed;
+                    bru.AppendLine("body:json {");
+                    bru.AppendLine($"  {trimmed}");
                     bru.AppendLine("}");
                     bru.AppendLine();
                 }
