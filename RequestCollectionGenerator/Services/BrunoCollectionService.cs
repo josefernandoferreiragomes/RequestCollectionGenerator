@@ -88,7 +88,7 @@ public class BrunoCollectionService
                 bru.AppendLine("}");
                 bru.AppendLine();
                 var method = entry.Verb.ToLowerInvariant();
-                bru.AppendLine($"{method} {{ ");
+                bru.AppendLine($"{method} {{");
                 bru.AppendLine($"  url: {entry.RequestedUrl}");
                 bru.AppendLine("  body: json");
                 bru.AppendLine("  auth: none");
@@ -102,11 +102,18 @@ public class BrunoCollectionService
                     bru.AppendLine("headers {");
                     foreach (var h in headers)
                     {
-                        bru.AppendLine($"  {h.Key}: {h.Value} ");
+                        var safeValue = string.IsNullOrWhiteSpace(h.Value) ? "\"\"" : h.Value.Trim();
+
+                        // if the header value contains spaces or equals signs, quote it
+                        if (safeValue.Contains(' ') || safeValue.Contains('='))
+                            safeValue = $"\"{safeValue}\"";
+
+                        bru.AppendLine($"  {h.Key}: {safeValue}");
                     }
                     bru.AppendLine("}");
                     bru.AppendLine();
                 }
+
 
                 // Include body if present
                 if (!string.IsNullOrWhiteSpace(entry.BodyContent))
