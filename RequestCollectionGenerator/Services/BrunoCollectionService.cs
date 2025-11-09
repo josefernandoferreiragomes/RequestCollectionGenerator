@@ -74,11 +74,57 @@ public class BrunoCollectionService
                         method = entry.Verb.ToUpper(),
                         headers = ParseHeaders(entry.HeaderContent),
                         body = entry.BodyContent
-    }
+                    }
                 };
 
-                var json = JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(bruFilePath, json);
+                // Build the Bruno .bru content
+                var headers = ParseHeaders(entry.HeaderContent);
+                var bru = new StringBuilder();
+
+                bru.AppendLine("meta {");
+                bru.AppendLine($"  name: {entry.Verb.ToUpper()} {ShortenUrl(entry.RequestedUrl)}");
+                bru.AppendLine("  type: http");
+                bru.AppendLine("  seq: 1");
+                bru.AppendLine("}");
+                bru.AppendLine();
+                var method = entry.Verb.ToLowerInvariant();
+                bru.AppendLine($"{method} {{ ");
+                bru.AppendLine($"  url: {entry.RequestedUrl}");
+                bru.AppendLine("  body: json");
+                bru.AppendLine("  auth: none");
+
+                bru.AppendLine("}");
+                bru.AppendLine();
+
+                // Include headers if any
+                if (headers.Any())
+                {
+                    bru.AppendLine("  headers {");
+                    foreach (var h in headers)
+                    {
+                        bru.AppendLine($"     {h.Key}: {h.Value} ");
+                    }
+                    bru.AppendLine("  }");
+                    bru.AppendLine();
+                }
+
+                // Include body if present
+                if (!string.IsNullOrWhiteSpace(entry.BodyContent))
+                {
+                    // Escape double quotes for safety
+                    var safeBody = entry.BodyContent;//.Replace("\"", "\\\"");
+                    bru.AppendLine("  body: json {");
+                    bru.AppendLine($"  {safeBody}");
+                    bru.AppendLine("}");
+                    bru.AppendLine();
+                }
+
+                bru.AppendLine("docs {");
+                bru.AppendLine("  Generated automatically from Azure logs");
+                bru.AppendLine("}");
+
+                File.WriteAllText(bruFilePath, bru.ToString());
+
 
                 previousCallee = callee;
             }
