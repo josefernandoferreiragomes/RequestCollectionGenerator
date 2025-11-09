@@ -1,0 +1,24 @@
+meta {
+  name: POST backend_audit
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://api.company.com/backend/audit
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: "Bearer abc"
+}
+
+body:json {
+  { "action": "view" }
+}
+
+docs {
+  Generated automatically from Azure logs
+}

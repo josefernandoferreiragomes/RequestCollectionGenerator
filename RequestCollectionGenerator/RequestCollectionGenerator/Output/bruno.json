@@ -1,0 +1,10 @@
+{
+  "version": "1",
+  "name": "Generated API Collection",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "description": "Generated from Azure logs"
+}

@@ -1,0 +1,23 @@
+meta {
+  name: Get Users copy
+  type: http
+  seq: 3
+}
+
+get {
+  url: https://jsonplaceholder.typicode.com/users
+  body: json
+  auth: none
+}
+
+headers {
+  test: 1
+}
+
+body:json {
+  {"prop1": "a"}
+}
+
+docs {
+  This request retrieves a list of users from the JSONPlaceholder API.
+}

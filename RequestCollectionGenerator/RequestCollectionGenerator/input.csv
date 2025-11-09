@@ -1,0 +1,6 @@
+TimeStamp,TraceId,Verb,ResultCode,RequestedUrl,HeaderContent,BodyContent
+2025-11-08T10:01:00Z,T100,GET,200,https://api.company.com/channel/messages,Authorization: Bearer xyz,{ "page": 1 }
+2025-11-08T10:01:05Z,T100,POST,200,https://api.company.com/middle/validate,Content-Type: application/json; Authorization: Bearer xyz,{ "user": "john.doe" }
+2025-11-08T10:01:10Z,T100,POST,201,https://api.company.com/backend/data,Content-Type: application/json; Authorization: Bearer xyz,{ "item": "asset-123" }
+2025-11-08T10:02:00Z,T200,GET,200,https://api.company.com/channel/profile,Authorization: Bearer abc,{ "include": "summary" }
+2025-11-08T10:02:05Z,T200,POST,201,https://api.company.com/backend/audit,Content-Type: application/json; Authorization: Bearer abc,{ "action": "view" }

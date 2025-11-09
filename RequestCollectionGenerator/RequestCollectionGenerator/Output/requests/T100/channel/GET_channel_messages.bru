@@ -1,0 +1,23 @@
+meta {
+  name: GET channel_messages
+  type: http
+  seq: 1
+}
+
+get {
+  url: https://api.company.com/channel/messages
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: "Bearer xyz"
+}
+
+body:json {
+  { "page": 1 }
+}
+
+docs {
+  Generated automatically from Azure logs
+}

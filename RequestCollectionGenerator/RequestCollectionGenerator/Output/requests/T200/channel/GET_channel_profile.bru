@@ -1,0 +1,23 @@
+meta {
+  name: GET channel_profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: https://api.company.com/channel/profile
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: "Bearer abc"
+}
+
+body:json {
+  { "include": "summary" }
+}
+
+docs {
+  Generated automatically from Azure logs
+}
